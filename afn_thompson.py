@@ -17,10 +17,7 @@ y agrega:
                       y ε del nuevo inicio al nuevo fin
   2. Dibujo del grafo del AFN en pantalla (imagen PNG), mostrando el estado
      inicial, los estados adicionales, el estado de aceptación y las
-     transiciones etiquetadas con su símbolo. Los estados se numeran y se
-     ubican en el dibujo siguiendo el mismo orden en que Thompson los
-     construyó (izquierda a derecha para "·", ramas de "|" apiladas, "*"
-     anidado), y cada expresión del archivo reinicia su numeración en q0.
+     transiciones etiquetadas con su símbolo.
   3. Simulación del AFN sobre una cadena w usando cerradura-epsilon, e
      imprime "sí" si w pertenece a L(r) y "no" en caso contrario.
 
@@ -157,9 +154,7 @@ def _fmt(conjunto):
 def thompson(nodo, pasos):
     """
     Recorre el árbol sintáctico en postorden y arma el AFN de Thompson.
-    Retorna (Fragmento, estructura), donde 'estructura' es un árbol paralelo
-    que conserva el orden real de construcción (para poder dibujar el AFN
-    en ese mismo orden, en vez de reordenarlo por id o por nivel BFS).
+    Retorna un Fragmento (inicio, aceptacion).
     """
     # ---- Caso base: hoja (símbolo o ε)
     if nodo.es_hoja():
@@ -171,26 +166,23 @@ def thompson(nodo, pasos):
         else:
             inicio.agregar(nodo.valor, fin)
             pasos.append(f"  hoja '{nodo.valor}' -> {inicio} --{nodo.valor}--> {fin}")
-        return Fragmento(inicio, fin), ("hoja", inicio, fin)
+        return Fragmento(inicio, fin)
 
     # ---- Concatenación: r · s
     if nodo.valor == "·":
-        frag_izq, est_izq = thompson(nodo.izquierdo, pasos)
-        frag_der, est_der = thompson(nodo.derecho, pasos)
+        frag_izq = thompson(nodo.izquierdo, pasos)
+        frag_der = thompson(nodo.derecho, pasos)
         frag_izq.aceptacion.agregar(None, frag_der.inicio)
         pasos.append(
             f"  concatenación '·' -> se une {frag_izq.aceptacion} --ε--> {frag_der.inicio}"
         )
-        return Fragmento(frag_izq.inicio, frag_der.aceptacion), ("concat", est_izq, est_der)
+        return Fragmento(frag_izq.inicio, frag_der.aceptacion)
 
     # ---- Alternancia: r | s
     if nodo.valor == "|":
-        # 'inicio' se crea ANTES de recorrer las ramas para que su id (y por
-        # lo tanto su posición al dibujar) quede a la izquierda de ellas,
-        # igual que en el AFN resultante.
+        frag_izq = thompson(nodo.izquierdo, pasos)
+        frag_der = thompson(nodo.derecho, pasos)
         inicio = Estado()
-        frag_izq, est_izq = thompson(nodo.izquierdo, pasos)
-        frag_der, est_der = thompson(nodo.derecho, pasos)
         fin = Estado()
         inicio.agregar(None, frag_izq.inicio)
         inicio.agregar(None, frag_der.inicio)
@@ -200,12 +192,12 @@ def thompson(nodo, pasos):
             f"  alternancia '|' -> nuevo inicio {inicio} con ε a ambas ramas, "
             f"ambas ramas con ε a {fin}"
         )
-        return Fragmento(inicio, fin), ("alt", inicio, fin, est_izq, est_der)
+        return Fragmento(inicio, fin)
 
     # ---- Clausura de Kleene: r*
     if nodo.valor == "*":
-        inicio = Estado()  # creado antes de recorrer, ver comentario arriba
-        frag, est_interna = thompson(nodo.izquierdo, pasos)
+        frag = thompson(nodo.izquierdo, pasos)
+        inicio = Estado()
         fin = Estado()
         inicio.agregar(None, frag.inicio)   # entrar al fragmento
         inicio.agregar(None, fin)           # saltarlo (cero repeticiones)
@@ -215,111 +207,51 @@ def thompson(nodo, pasos):
             f"  clausura '*' -> nuevo inicio {inicio} y fin {fin}, "
             f"con ε de salto y ε de repetición"
         )
-        return Fragmento(inicio, fin), ("star", inicio, fin, est_interna)
+        return Fragmento(inicio, fin)
 
     raise ErrorExpresion(f"Operador '{nodo.valor}' no soportado en la construcción de Thompson.")
 
 
 def construir_afn(raiz, pasos):
-    fragmento, estructura = thompson(raiz, pasos)
-    return AFN(fragmento.inicio, fragmento.aceptacion), estructura
-
-
-# ---------------------------------------------------------------------------
-# Cálculo de posiciones siguiendo el orden real de construcción
-# ---------------------------------------------------------------------------
-def _peso(estructura):
-    """'Peso' vertical de un fragmento: cuántas ramas paralelas (de |) contiene."""
-    tipo = estructura[0]
-    if tipo == "hoja":
-        return 1
-    if tipo == "concat":
-        return max(_peso(estructura[1]), _peso(estructura[2]))
-    if tipo == "alt":
-        return _peso(estructura[3]) + _peso(estructura[4])
-    if tipo == "star":
-        return _peso(estructura[3])
-    raise ValueError(tipo)
-
-
-def _layout(estructura, x, y_centro, alto_banda, posiciones):
-    """
-    Asigna coordenadas (x, y) a cada estado siguiendo el mismo orden en que
-    Thompson construyó el fragmento: izquierda -> derecha para concatenación,
-    ramas apiladas verticalmente para alternancia, y anidado para '*'.
-    Retorna la coordenada x donde termina este fragmento.
-    """
-    tipo = estructura[0]
-
-    if tipo == "hoja":
-        _, inicio, fin = estructura
-        posiciones[inicio] = (x, y_centro)
-        posiciones[fin] = (x + 1.0, y_centro)
-        return x + 2.0
-
-    if tipo == "concat":
-        _, est_izq, est_der = estructura
-        x = _layout(est_izq, x, y_centro, alto_banda, posiciones)
-        x = _layout(est_der, x, y_centro, alto_banda, posiciones)
-        return x
-
-    if tipo == "alt":
-        _, inicio, fin, est_izq, est_der = estructura
-        peso_izq = _peso(est_izq)
-        peso_der = _peso(est_der)
-        total = peso_izq + peso_der
-        alto_izq = alto_banda * peso_izq / total
-        alto_der = alto_banda * peso_der / total
-        y_izq = y_centro + (alto_banda - alto_izq) / 2
-        y_der = y_centro - (alto_banda - alto_der) / 2
-
-        posiciones[inicio] = (x, y_centro)
-        # x1 / x2 ya son la próxima columna libre después de cada rama
-        # (es decir, la posición del fin de esa rama + 1), así que el fin
-        # de esta alternancia se ubica ahí, sin pisar a las ramas.
-        x1 = _layout(est_izq, x + 1.0, y_izq, alto_izq, posiciones)
-        x2 = _layout(est_der, x + 1.0, y_der, alto_der, posiciones)
-        x_max = max(x1, x2)
-        posiciones[fin] = (x_max, y_centro)
-        return x_max + 1.0
-
-    if tipo == "star":
-        _, inicio, fin, est_interna = estructura
-        posiciones[inicio] = (x, y_centro)
-        x1 = _layout(est_interna, x + 1.0, y_centro, alto_banda, posiciones)
-        posiciones[fin] = (x1, y_centro)
-        return x1 + 1.0
-
-    raise ValueError(tipo)
-
-
-def calcular_posiciones(estructura):
-    posiciones = {}
-    _layout(estructura, 0.0, 0.0, max(_peso(estructura), 1), posiciones)
-    return posiciones
+    fragmento = thompson(raiz, pasos)
+    return AFN(fragmento.inicio, fragmento.aceptacion)
 
 
 # ---------------------------------------------------------------------------
 # Dibujo del grafo del AFN
 # ---------------------------------------------------------------------------
-def dibujar_afn(afn, estructura, titulo, ruta_imagen):
+def dibujar_afn(afn, titulo, ruta_imagen):
     """
-    Dibuja el AFN siguiendo el mismo orden en que Thompson lo construyó:
-    izquierda -> derecha para concatenación, ramas de '|' apiladas
-    verticalmente y '*' anidado alrededor de su fragmento interno. Así el
-    dibujo queda ordenado igual que los pasos de construcción impresos.
+    Dibuja el AFN por niveles (distancia en transiciones desde el inicio).
     Marca el estado inicial con una flecha entrante y el de aceptación con
     doble círculo.
     """
-    posiciones_base = calcular_posiciones(estructura)
-    posiciones = {
-        estado: (x * 2.2, y * 1.6) for estado, (x, y) in posiciones_base.items()
-    }
+    # nivel de cada estado = distancia mínima desde el inicio (BFS)
+    nivel = {afn.inicio: 0}
+    cola = [afn.inicio]
+    while cola:
+        estado = cola.pop(0)
+        for _, destino in estado.transiciones:
+            if destino not in nivel:
+                nivel[destino] = nivel[estado] + 1
+                cola.append(destino)
+    for estado in afn.estados:
+        nivel.setdefault(estado, 0)
 
-    columnas = sorted({round(x, 3) for x, _ in posiciones.values()})
-    filas = sorted({round(y, 3) for _, y in posiciones.values()})
-    ancho = max(3, len(columnas) * 1.6)
-    alto = max(3, len(filas) * 1.3)
+    # agrupar por nivel y asignar coordenadas
+    por_nivel = {}
+    for estado in afn.estados:
+        por_nivel.setdefault(nivel[estado], []).append(estado)
+
+    posiciones = {}
+    for nivel_actual, estados in por_nivel.items():
+        estados.sort(key=lambda e: e.id)
+        for indice, estado in enumerate(estados):
+            desplazamiento = (len(estados) - 1) / 2
+            posiciones[estado] = (nivel_actual * 2.2, (indice - desplazamiento) * 1.6)
+
+    ancho = max(3, len(por_nivel) * 1.6)
+    alto = max(3, max(len(v) for v in por_nivel.values()) * 1.3)
     figura, ejes = plt.subplots(figsize=(min(ancho, 26), min(alto, 14)))
     ejes.set_title(titulo, fontsize=11)
     ejes.axis("off")
@@ -363,6 +295,13 @@ def dibujar_afn(afn, estructura, titulo, ruta_imagen):
     ejes.annotate("", xy=(xi - 0.28, yi), xytext=(xi - 1.1, yi),
                   arrowprops=dict(arrowstyle="->", color="black", lw=1.4))
     ejes.text(xi - 1.2, yi, "inicio", fontsize=8, ha="right", va="center")
+
+    ejes.relim()
+    ejes.autoscale_view()
+    x0, x1 = ejes.get_xlim()
+    y0, y1 = ejes.get_ylim()
+    ejes.set_xlim(x0 - 0.4, x1 + 0.4)
+    ejes.set_ylim(y0 - 0.4, y1 + 0.8)
 
     figura.tight_layout()
     figura.savefig(ruta_imagen, dpi=150, bbox_inches="tight")
@@ -415,10 +354,9 @@ def procesar_archivo(ruta_archivo, cadena_w):
 
         # 3) árbol -> AFN (Thompson)
         print("\nConstrucción de Thompson (pasos):")
-        Estado._contador = 0  # cada expresión reinicia su numeración desde q0
         pasos_thompson = []
         try:
-            afn, estructura = construir_afn(raiz, pasos_thompson)
+            afn = construir_afn(raiz, pasos_thompson)
         except ErrorExpresion as error:
             print(f"  ERROR construyendo el AFN: {error}")
             print("=" * 72)
@@ -439,7 +377,7 @@ def procesar_archivo(ruta_archivo, cadena_w):
 
         # 4) dibujo
         ruta_imagen = f"afn_{numero}.png"
-        dibujar_afn(afn, estructura, f"AFN de Thompson para: {expresion}", ruta_imagen)
+        dibujar_afn(afn, f"AFN de Thompson para: {expresion}", ruta_imagen)
         print(f"\n  Grafo del AFN guardado en: {ruta_imagen}")
 
         # 5) simulación
