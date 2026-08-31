@@ -2,9 +2,9 @@
 AFD por construcción de subconjuntos, a partir del AFN de Thompson.
 
 Este programa REUTILIZA los laboratorios anteriores:
-    shunting_yard.py    -> infix a postfix
-    arbol_sintactico.py -> postfix a árbol sintáctico (con simplificación de + y ?)
-    afn_thompson.py      -> árbol sintáctico a AFN (Thompson) + dibujo + simulación
+    shunting_yard.py    
+    arbol_sintactico.py 
+    afn_thompson.py      
 
 y agrega:
   1. Construcción del AFD aplicando el algoritmo de construcción de
@@ -23,10 +23,9 @@ y agrega:
 
 Uso:
     python afd_subconjuntos.py archivo_expresiones.txt "cadena_a_probar"
-    python afd_subconjuntos.py archivo_expresiones.txt        (pide la cadena por teclado)
+    python afd_subconjuntos.py archivo_expresiones.txt       
 
-Requiere:
-    pip install matplotlib
+
 """
 
 import sys
@@ -39,9 +38,7 @@ from arbol_sintactico import construir_arbol, imprimir_arbol
 from afn_thompson import construir_afn, _fmt
 
 
-# ---------------------------------------------------------------------------
 # Objetos del AFD
-# ---------------------------------------------------------------------------
 class EstadoAFD:
     """
     Un estado del AFD. 'nombre' es el identificador visible (Dn) y
@@ -99,9 +96,7 @@ class AFD:
         return aceptada
 
 
-# ---------------------------------------------------------------------------
 # Construcción de subconjuntos
-# ---------------------------------------------------------------------------
 def construir_afd(afn, pasos):
     """
     Aplica el algoritmo de construcción de subconjuntos sobre 'afn'.
@@ -158,9 +153,7 @@ def construir_afd(afn, pasos):
     return AFD(inicio, todos_los_estados, aceptacion, alfabeto)
 
 
-# ---------------------------------------------------------------------------
 # Dibujo del grafo del AFD
-# ---------------------------------------------------------------------------
 def dibujar_afd(afd, titulo, ruta_imagen):
     """Dibuja el AFD por niveles (BFS desde el inicio), igual estilo que el AFN."""
     nivel = {afd.inicio: 0}
@@ -239,9 +232,7 @@ def dibujar_afd(afd, titulo, ruta_imagen):
     plt.close(figura)
 
 
-# ---------------------------------------------------------------------------
 # Procesamiento del archivo
-# ---------------------------------------------------------------------------
 def procesar_archivo(ruta_archivo, cadena_w):
     try:
         with open(ruta_archivo, "r", encoding="utf-8") as archivo:

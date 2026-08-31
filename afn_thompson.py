@@ -2,8 +2,8 @@
 AFN por construcción de Thompson a partir del árbol sintáctico de una regex.
 
 Este programa REUTILIZA los laboratorios anteriores:
-    shunting_yard.py    -> infix a postfix
-    arbol_sintactico.py -> postfix a árbol sintáctico (con simplificación de + y ?)
+    shunting_yard.py    
+    arbol_sintactico.py 
 
 y agrega:
   1. Construcción del AFN aplicando el algoritmo de Thompson recorriendo el
@@ -38,9 +38,7 @@ from shunting_yard import a_postfix, ErrorExpresion
 from arbol_sintactico import construir_arbol, imprimir_arbol, EPSILON
 
 
-# ---------------------------------------------------------------------------
 # Objetos del autómata
-# ---------------------------------------------------------------------------
 class Estado:
     """Un estado del AFN. Guarda sus transiciones salientes."""
 
@@ -308,9 +306,7 @@ def dibujar_afn(afn, titulo, ruta_imagen):
     plt.close(figura)
 
 
-# ---------------------------------------------------------------------------
 # Procesamiento del archivo
-# ---------------------------------------------------------------------------
 def procesar_archivo(ruta_archivo, cadena_w):
     try:
         with open(ruta_archivo, "r", encoding="utf-8") as archivo:

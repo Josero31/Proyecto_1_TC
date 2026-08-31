@@ -20,9 +20,7 @@ Uso:
 import sys
 
 
-# ---------------------------------------------------------------------------
 # Tipos de token
-# ---------------------------------------------------------------------------
 LITERAL = "LITERAL"
 LPAREN = "LPAREN"
 RPAREN = "RPAREN"
@@ -77,9 +75,7 @@ class ErrorExpresion(Exception):
     pass
 
 
-# ---------------------------------------------------------------------------
 # Tokenización
-# ---------------------------------------------------------------------------
 def tokenizar(expresion):
     """
     Convierte el string de la expresión en una lista de Token.
@@ -231,9 +227,7 @@ def a_postfix(expresion):
     return salida, pasos
 
 
-# ---------------------------------------------------------------------------
 # Procesamiento de archivo
-# ---------------------------------------------------------------------------
 def procesar_archivo(ruta_archivo):
     try:
         with open(ruta_archivo, "r", encoding="utf-8") as archivo:

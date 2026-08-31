@@ -29,9 +29,6 @@ import matplotlib
 matplotlib.use("Agg")  # genera las imágenes sin necesitar ventana gráfica
 import matplotlib.pyplot as plt
 
-# ---------------------------------------------------------------------------
-# Reutilización del laboratorio anterior
-# ---------------------------------------------------------------------------
 from shunting_yard import (
     a_postfix, ErrorExpresion,
     LITERAL, ALT, CONCAT, QUANT, Token,
@@ -40,9 +37,7 @@ from shunting_yard import (
 EPSILON = "ε"
 
 
-# ---------------------------------------------------------------------------
 # Nodo del árbol sintáctico
-# ---------------------------------------------------------------------------
 class Nodo:
     """Objeto que guarda la información de cada nodo del árbol sintáctico."""
 
@@ -65,9 +60,8 @@ class Nodo:
         return Nodo(self.valor, izq, der)
 
 
-# ---------------------------------------------------------------------------
+
 # Construcción del árbol desde la postfix (con pila)
-# ---------------------------------------------------------------------------
 def construir_arbol(postfix_tokens, pasos):
     """
     Recorre la lista de tokens en postfix y construye el árbol sintáctico
@@ -126,9 +120,7 @@ def construir_arbol(postfix_tokens, pasos):
     return pila[0]
 
 
-# ---------------------------------------------------------------------------
 # Impresión del árbol en consola (modo texto)
-# ---------------------------------------------------------------------------
 def imprimir_arbol(nodo, prefijo="", es_ultimo=True):
     conector = "└── " if es_ultimo else "├── "
     print(prefijo + conector + nodo.valor)
@@ -138,9 +130,7 @@ def imprimir_arbol(nodo, prefijo="", es_ultimo=True):
         imprimir_arbol(hijo, prefijo + extension, i == len(hijos) - 1)
 
 
-# ---------------------------------------------------------------------------
 # Dibujo del árbol con matplotlib
-# ---------------------------------------------------------------------------
 def _asignar_posiciones(nodo, profundidad, siguiente_x, posiciones):
     """Postorden: primero se posicionan los hijos, luego el padre se centra."""
     if nodo.izquierdo:
@@ -181,9 +171,7 @@ def dibujar_arbol(raiz, titulo, ruta_imagen):
     plt.close(figura)
 
 
-# ---------------------------------------------------------------------------
 # Procesamiento del archivo
-# ---------------------------------------------------------------------------
 def procesar_archivo(ruta_archivo):
     try:
         with open(ruta_archivo, "r", encoding="utf-8") as archivo:
