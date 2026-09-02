@@ -32,10 +32,13 @@ Requiere:
     pip install matplotlib
 """
 
+import math
 import sys
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+
+from dibujo import dibujar_automata
 
 from shunting_yard import a_postfix, ErrorExpresion
 from arbol_sintactico import construir_arbol
@@ -237,11 +240,71 @@ def _fmt_bloque_estados(bloque):
     return "{" + ", ".join(sorted(nombres)) + "}"
 
 
+def _offsets_bucle(angulo_grados):
+    """
+    Calcula los tres puntos que arma un auto-bucle (flecha de un estado hacia
+    sí mismo), rotados 'angulo_grados' alrededor del estado. Así, cuando un
+    estado tiene varios símbolos en auto-bucle, cada uno queda en un ángulo
+    distinto y no se superponen entre sí.
+    Retorna (punta_flecha, inicio_flecha, posicion_etiqueta), cada uno como
+    un desplazamiento (dx, dy) relativo al centro del estado.
+    """
+    theta = math.radians(angulo_grados)
+
+    def rotar(dx, dy):
+        return (dx * math.cos(theta) - dy * math.sin(theta),
+                dx * math.sin(theta) + dy * math.cos(theta))
+
+    punta = rotar(0.0, 0.30)
+    inicio = rotar(0.42, 0.66)
+    etiqueta = rotar(0.50, 0.86)
+    return punta, inicio, etiqueta
+
+
+def _curvatura(x1, y1, x2, y2):
+    """
+    Lado hacia el que se curva una transición. Cuando los dos estados están al
+    mismo nivel vertical se usa la posición horizontal para decidir, de modo que
+    la flecha de ida y la de vuelta no queden exactamente encimadas.
+    """
+    if y1 != y2:
+        return 0.18 if y1 < y2 else -0.18
+    return 0.18 if x1 <= x2 else -0.18
+
+
+def _ajustar_ejes(ejes):
+    """
+    Deja los ejes con proporción 1:1 (para que los estados se vean como
+    círculos y no como óvalos aplastados) y garantiza un área mínima, que es
+    lo que se necesita cuando el autómata tiene un solo estado.
+    """
+    ejes.set_aspect("equal", adjustable="datalim")
+    ejes.relim()
+    ejes.autoscale_view()
+
+    x0, x1 = ejes.get_xlim()
+    y0, y1 = ejes.get_ylim()
+
+    ancho_minimo, alto_minimo = 4.6, 3.2
+    if x1 - x0 < ancho_minimo:
+        centro = (x0 + x1) / 2
+        x0, x1 = centro - ancho_minimo / 2, centro + ancho_minimo / 2
+    if y1 - y0 < alto_minimo:
+        centro = (y0 + y1) / 2
+        y0, y1 = centro - alto_minimo / 2, centro + alto_minimo / 2
+
+    ejes.set_xlim(x0 - 0.45, x1 + 0.45)
+    ejes.set_ylim(y0 - 0.45, y1 + 0.75)
+
+
 # ---------------------------------------------------------------------------
 # Dibujo del grafo del AFD mínimo
 # ---------------------------------------------------------------------------
 def dibujar_afd_min(afd, titulo, ruta_imagen):
-    """Dibuja el AFD mínimo por niveles (BFS desde el inicio)."""
+    """
+    Dibuja el AFD mínimo por niveles (BFS desde el inicio), usando el mismo
+    módulo de dibujo que el AFN y el AFD por subconjuntos.
+    """
     nivel = {afd.inicio: 0}
     cola = [afd.inicio]
     while cola:
@@ -262,60 +325,17 @@ def dibujar_afd_min(afd, titulo, ruta_imagen):
         estados.sort(key=lambda e: e.nombre)
         for indice, estado in enumerate(estados):
             desplazamiento = (len(estados) - 1) / 2
-            posiciones[estado] = (nivel_actual * 2.4, (indice - desplazamiento) * 1.6)
+            posiciones[estado] = (nivel_actual * 2.4, (indice - desplazamiento) * 1.7)
 
-    ancho = max(3, len(por_nivel) * 1.8)
-    alto = max(3, max(len(v) for v in por_nivel.values()) * 1.3)
-    figura, ejes = plt.subplots(figsize=(min(ancho, 26), min(alto, 14)))
-    ejes.set_title(titulo, fontsize=11)
-    ejes.axis("off")
+    transiciones = [
+        (estado, simbolo, destino)
+        for estado in afd.estados
+        for simbolo, destino in estado.transiciones.items()
+    ]
+    nombres = {estado: estado.nombre for estado in afd.estados}
 
-    for estado in afd.estados:
-        x1, y1 = posiciones[estado]
-        for simbolo, destino in estado.transiciones.items():
-            x2, y2 = posiciones[destino]
-            if estado is destino:
-                ejes.annotate("", xy=(x1, y1 + 0.35), xytext=(x1 + 0.5, y1 + 0.9),
-                              arrowprops=dict(arrowstyle="->", color="gray",
-                                              connectionstyle="arc3,rad=0.6"))
-                ejes.text(x1 + 0.5, y1 + 1.0, simbolo, fontsize=8, ha="center")
-                continue
-            curvatura = 0.18 if y1 <= y2 else -0.18
-            ejes.annotate("", xy=(x2, y2), xytext=(x1, y1),
-                          arrowprops=dict(arrowstyle="->", color="gray", lw=1.0,
-                                          shrinkA=15, shrinkB=15,
-                                          connectionstyle=f"arc3,rad={curvatura}"))
-            ejes.text((x1 + x2) / 2, (y1 + y2) / 2 + 0.18, simbolo,
-                      fontsize=8, ha="center", color="#b03030")
-
-    for estado in afd.estados:
-        x, y = posiciones[estado]
-        if estado is afd.inicio:
-            color = "#ffe0a3"
-        elif estado in afd.aceptacion:
-            color = "#c8f0c0"
-        else:
-            color = "#dceaff"
-        ejes.scatter([x], [y], s=750, c=color, edgecolors="black", zorder=3)
-        if estado in afd.aceptacion:
-            ejes.scatter([x], [y], s=1150, facecolors="none", edgecolors="black", zorder=3)
-        ejes.text(x, y, estado.nombre, ha="center", va="center", fontsize=8, zorder=4)
-
-    xi, yi = posiciones[afd.inicio]
-    ejes.annotate("", xy=(xi - 0.32, yi), xytext=(xi - 1.2, yi),
-                  arrowprops=dict(arrowstyle="->", color="black", lw=1.4))
-    ejes.text(xi - 1.3, yi, "inicio", fontsize=8, ha="right", va="center")
-
-    ejes.relim()
-    ejes.autoscale_view()
-    x0, x1 = ejes.get_xlim()
-    y0, y1 = ejes.get_ylim()
-    ejes.set_xlim(x0 - 0.4, x1 + 0.4)
-    ejes.set_ylim(y0 - 0.4, y1 + 0.8)
-
-    figura.tight_layout()
-    figura.savefig(ruta_imagen, dpi=150, bbox_inches="tight")
-    plt.close(figura)
+    dibujar_automata(titulo, ruta_imagen, posiciones, transiciones,
+                     afd.inicio, afd.aceptacion, nombres)
 
 
 # ---------------------------------------------------------------------------
