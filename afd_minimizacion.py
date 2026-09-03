@@ -2,7 +2,7 @@
 Minimización de un AFD por el algoritmo de refinamiento de particiones
 (equivalente al método de llenado de tabla / algoritmo de Moore).
 
-Este programa REUTILIZA los laboratorios anteriores:
+Este programa REUTILIZA :
     shunting_yard.py    -> infix a postfix
     arbol_sintactico.py -> postfix a árbol sintáctico
     afn_thompson.py     -> árbol sintáctico a AFN (Thompson)
@@ -46,9 +46,7 @@ from afn_thompson import construir_afn
 from afd_subconjuntos import construir_afd
 
 
-# ---------------------------------------------------------------------------
 # Objetos del AFD mínimo
-# ---------------------------------------------------------------------------
 class EstadoAFDMin:
     """
     Un estado del AFD mínimo. 'nombre' es el identificador visible (Mn) y
@@ -112,9 +110,8 @@ def _fmt_bloque(bloque):
     return "{" + ", ".join(e.nombre for e in sorted(bloque, key=lambda x: x.nombre)) + "}"
 
 
-# ---------------------------------------------------------------------------
 # Minimización por refinamiento de particiones
-# ---------------------------------------------------------------------------
+# 
 # centinela para el estado trampa (destino de las transiciones no definidas)
 _TRAMPA = "TRAMPA"
 
@@ -151,7 +148,7 @@ def minimizar(afd, pasos):
     for i, bloque in enumerate(particion):
         pasos.append(f"    G{i} = {_fmt_bloque_estados(bloque)}")
 
-    # ---- refinamiento
+    #  refinamiento
     ronda = 0
     while True:
         ronda += 1
@@ -179,7 +176,7 @@ def minimizar(afd, pasos):
         for i, bloque in enumerate(particion):
             pasos.append(f"    G{i} = {_fmt_bloque_estados(bloque)}")
 
-    # ---- identificar el bloque muerto (el que contiene el estado trampa)
+    #identificar el bloque muerto (el que contiene el estado trampa)
     bloque_muerto = None
     for bloque in particion:
         if _TRAMPA in bloque:
@@ -191,7 +188,7 @@ def minimizar(afd, pasos):
     inicio_en_muerto = bloque_muerto is not None and afd.inicio in bloque_muerto
     descartar_muerto = bloque_muerto is not None and not inicio_en_muerto
 
-    # ---- construir los estados del AFD mínimo
+    # construir los estados del AFD mínimo
     # el bloque del estado inicial va primero para que quede como M0
     bloques_utiles = [b for b in particion if not (descartar_muerto and b is bloque_muerto)]
     bloques_utiles.sort(key=lambda b: (afd.inicio not in b))  # inicio primero
@@ -297,9 +294,7 @@ def _ajustar_ejes(ejes):
     ejes.set_ylim(y0 - 0.45, y1 + 0.75)
 
 
-# ---------------------------------------------------------------------------
 # Dibujo del grafo del AFD mínimo
-# ---------------------------------------------------------------------------
 def dibujar_afd_min(afd, titulo, ruta_imagen):
     """
     Dibuja el AFD mínimo por niveles (BFS desde el inicio), usando el mismo
@@ -338,9 +333,7 @@ def dibujar_afd_min(afd, titulo, ruta_imagen):
                      afd.inicio, afd.aceptacion, nombres)
 
 
-# ---------------------------------------------------------------------------
 # Procesamiento del archivo
-# ---------------------------------------------------------------------------
 def procesar_archivo(ruta_archivo, cadena_w):
     try:
         with open(ruta_archivo, "r", encoding="utf-8") as archivo:

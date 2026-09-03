@@ -2,12 +2,12 @@
 Teorema de Myhill-Nerode aplicado al AFD por el algoritmo de llenado de tabla
 (distinguibilidad de estados).
 
-Este programa REUTILIZA los laboratorios anteriores:
-    shunting_yard.py    -> infix a postfix
-    arbol_sintactico.py -> postfix a árbol sintáctico
-    afn_thompson.py     -> árbol sintáctico a AFN (Thompson)
-    afd_subconjuntos.py -> AFN a AFD (construcción de subconjuntos)
-    afd_minimizacion.py -> AFD a AFD mínimo (refinamiento de particiones)
+Este programa REUTILIZA :
+    shunting_yard.py    
+    arbol_sintactico.py 
+    afn_thompson.py     
+    afd_subconjuntos.py 
+    afd_minimizacion.py 
 
 Teorema de Myhill-Nerode:
     Para un lenguaje L se define la relación de indistinguibilidad sobre las
@@ -97,7 +97,7 @@ def construir_tabla(afd, pasos):
 
     distinguible = {}   # frozenset({p,q}) -> sufijo testigo (str)
 
-    # ---- base: aceptación vs no aceptación, testigo ε
+    # base: aceptación vs no aceptación, testigo ε
     for p, q in pares:
         if acepta(p) != acepta(q):
             distinguible[frozenset((p, q))] = ""   # "" representa ε
@@ -106,7 +106,7 @@ def construir_tabla(afd, pasos):
         f"(testigo ε)."
     )
 
-    # ---- paso: propagar hasta punto fijo
+    #  paso: propagar hasta punto fijo
     ronda = 0
     while True:
         ronda += 1

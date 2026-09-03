@@ -165,9 +165,7 @@ def insertar_concatenacion(tokens):
     return resultado
 
 
-# ---------------------------------------------------------------------------
 # Shunting Yard
-# ---------------------------------------------------------------------------
 def a_postfix(expresion):
     """
     Ejecuta el algoritmo de Shunting Yard sobre la expresión dada.

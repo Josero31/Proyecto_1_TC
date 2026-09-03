@@ -1,7 +1,7 @@
 """
 AFN por construcción de Thompson a partir del árbol sintáctico de una regex.
 
-Este programa REUTILIZA los laboratorios anteriores:
+Este programa REUTILIZA:
     shunting_yard.py    
     arbol_sintactico.py 
 
@@ -98,7 +98,7 @@ class AFN:
                     simbolos.add(simbolo)
         return sorted(simbolos)
 
-    # ---------------- simulación ----------------
+    #Simulación: 
     def cerradura_epsilon(self, conjunto_estados):
         """Todos los estados alcanzables usando solo transiciones ε."""
         pila = list(conjunto_estados)
@@ -149,15 +149,13 @@ def _fmt(conjunto):
     return "{" + ", ".join(str(e) for e in sorted(conjunto, key=lambda x: x.id)) + "}"
 
 
-# ---------------------------------------------------------------------------
 # Construcción de Thompson desde el árbol sintáctico
-# ---------------------------------------------------------------------------
 def thompson(nodo, pasos):
     """
     Recorre el árbol sintáctico en postorden y arma el AFN de Thompson.
     Retorna un Fragmento (inicio, aceptacion).
     """
-    # ---- Caso base: hoja (símbolo o ε)
+    #  Caso base: hoja (símbolo o ε)
     if nodo.es_hoja():
         inicio = Estado()
         fin = Estado()
@@ -169,7 +167,7 @@ def thompson(nodo, pasos):
             pasos.append(f"  hoja '{nodo.valor}' -> {inicio} --{nodo.valor}--> {fin}")
         return Fragmento(inicio, fin)
 
-    # ---- Concatenación: r · s
+    # Concatenación: r · s
     if nodo.valor == "·":
         frag_izq = thompson(nodo.izquierdo, pasos)
         frag_der = thompson(nodo.derecho, pasos)
@@ -179,7 +177,7 @@ def thompson(nodo, pasos):
         )
         return Fragmento(frag_izq.inicio, frag_der.aceptacion)
 
-    # ---- Alternancia: r | s
+    # Alternancia: r | s
     if nodo.valor == "|":
         frag_izq = thompson(nodo.izquierdo, pasos)
         frag_der = thompson(nodo.derecho, pasos)
@@ -195,7 +193,7 @@ def thompson(nodo, pasos):
         )
         return Fragmento(inicio, fin)
 
-    # ---- Clausura de Kleene: r*
+    # Clausura de Kleene: r*
     if nodo.valor == "*":
         frag = thompson(nodo.izquierdo, pasos)
         inicio = Estado()
@@ -218,9 +216,7 @@ def construir_afn(raiz, pasos):
     return AFN(fragmento.inicio, fragmento.aceptacion)
 
 
-# ---------------------------------------------------------------------------
 # Dibujo del grafo del AFN
-# ---------------------------------------------------------------------------
 def _offsets_bucle(angulo_grados):
     """
     Calcula los tres puntos que arman un auto-bucle (flecha de un estado hacia

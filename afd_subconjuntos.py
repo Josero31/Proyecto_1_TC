@@ -1,7 +1,7 @@
 """
 AFD por construcción de subconjuntos, a partir del AFN de Thompson.
 
-Este programa REUTILIZA los laboratorios anteriores:
+Este programa REUTILIZA :
     shunting_yard.py    
     arbol_sintactico.py 
     afn_thompson.py      

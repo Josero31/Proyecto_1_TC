@@ -116,7 +116,7 @@ def dibujar_automata(titulo, ruta_imagen, posiciones, transiciones,
     ejes.set_xlim(x0, x1)
     ejes.set_ylim(y0, y1)
 
-    # ---- transiciones
+    #  transiciones
     # los bucles de un mismo estado se agrupan para repartirlos en ángulos
     bucles = {}
     for origen, etiqueta, destino in transiciones:
@@ -175,7 +175,7 @@ def dibujar_automata(titulo, ruta_imagen, posiciones, transiciones,
         ejes.text(x, y, nombres[estado], ha="center", va="center",
                   fontsize=8, zorder=4)
 
-    # ---- flecha del estado inicial
+    #  flecha del estado inicial
     xi, yi = posiciones[inicio]
     ejes.annotate("", xy=(xi - radio_de(inicio), yi), xytext=(xi - 1.15, yi),
                   arrowprops=dict(arrowstyle="->", color="black", lw=1.4))

@@ -76,7 +76,7 @@ def procesar_expresion(numero, expresion, cadena_w):
     print("\n[2] Árbol sintáctico:")
     imprimir_arbol(raiz)
 
-    # ---- 3) árbol -> AFN (Thompson)
+    # 3) árbol -> AFN (Thompson)
     try:
         afn = construir_afn(raiz, [])
     except ErrorExpresion as error:
@@ -94,7 +94,7 @@ def procesar_expresion(numero, expresion, cadena_w):
     for paso in pasos_afn:
         print("  " + paso)
 
-    # ---- 4) AFN -> AFD (subconjuntos)
+    #  4) AFN -> AFD (subconjuntos)
     afd = construir_afd(afn, [])
     img_afd = os.path.join(CARPETA_IMAGENES, "afd", f"afd_{numero}.png")
     dibujar_afd(afd, f"AFD (subconjuntos) para: {expresion}", img_afd)
@@ -107,7 +107,7 @@ def procesar_expresion(numero, expresion, cadena_w):
     for paso in pasos_afd:
         print("  " + paso)
 
-    # ---- 5) AFD -> AFD mínimo (refinamiento de particiones)
+    #  5) AFD -> AFD mínimo (refinamiento de particiones)
     afd_min = minimizar(afd, [])
     img_min = os.path.join(CARPETA_IMAGENES, "afd_min", f"afd_min_{numero}.png")
     dibujar_afd_min(afd_min, f"AFD mínimo para: {expresion}", img_min)
@@ -121,7 +121,7 @@ def procesar_expresion(numero, expresion, cadena_w):
     for paso in pasos_min:
         print("  " + paso)
 
-    # ---- 6) Myhill-Nerode (llenado de tabla) sobre el mismo AFD
+    #  6) Myhill-Nerode (llenado de tabla) sobre el mismo AFD
     estados_mn, distinguible, hay_muerto = construir_tabla(afd, [])
     clases = clases_de_equivalencia(estados_mn, distinguible)
     afd_mn = afd_desde_clases(afd, clases, hay_muerto)
@@ -137,7 +137,7 @@ def procesar_expresion(numero, expresion, cadena_w):
           f"({'coinciden' if clases_vivas == len(afd_min.estados) else 'NO COINCIDEN'})")
     print(f"    Imagen: {img_mn}")
 
-    # ---- veredicto: los cuatro autómatas deben coincidir
+    # veredicto: los cuatro autómatas deben coincidir
     def sn(valor):
         return "sí" if valor else "no"
 
