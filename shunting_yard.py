@@ -99,7 +99,7 @@ def tokenizar(expresion):
                 raise ErrorExpresion(
                     f"Escape inválido: '\\' al final de la expresión (posición {i})."
                 )
-            escapado = expresion[i:i + 2]  # ej: "\+"
+            escapado = expresion[i+1]  # ej: "\+"
             tokens.append(Token(LITERAL, escapado))
             i += 2
 
